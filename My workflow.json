@@ -1,0 +1,231 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3a78e1c0-ce58-41c2-a3e0-461f7ba11a9d",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Mhv0DQPHiMpUL0r2",
+          "name": "Crendencial Google"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Captura\nconst assunto = $json.subject || \"Sem assunto\";\nconst corpoOriginal = $json.text || $json.html || \"Sem conteúdo\";\nconst remetente = $json.from || \"Desconhecido\";\nconst dataRecebimento = $json.date || new Date().toISOString();\n\n// remove quebras estranhas, múltiplos espaços, assinaturas longas\nlet corpo = corpoOriginal\n  .replace(/(<[^>]+>)/g, \"\")          // remove tags HTML, caso existam\n  .replace(/\\r\\n/g, \"\\n\")             // uniformiza quebras de linha\n  .replace(/\\n{3,}/g, \"\\n\\n\")         // reduz múltiplas quebras\n  .trim();\n\n// CLASSIFICAÇÃO SIMPLES DO EMAIL\nlet categoria = \"geral\";\n\nif (corpo.toLowerCase().includes(\"erro\") || corpo.includes(\"alerta\")) {\n  categoria = \"alerta\";\n}\nif (corpo.toLowerCase().includes(\"fatura\") || corpo.includes(\"pagamento\")) {\n  categoria = \"financeiro\";\n}\nif (corpo.toLowerCase().includes(\"vaga\") || corpo.toLowerCase().includes(\"currículo\")) {\n  categoria = \"rh\";\n}\n\n// EXTRAÇÃO DE PALAVRAS-CHAVE BÁSICAS\nconst palavrasChave = [];\nconst padroes = [\"erro\", \"falha\", \"pagamento\", \"fatura\", \"suporte\", \"urgente\", \"alerta\", \"pedido\"];\n\nfor (const palavra of padroes) {\n  if (corpo.toLowerCase().includes(palavra)) {\n    palavrasChave.push(palavra);\n  }\n}\n\n// TEXTO FINAL FORMATADO\nconst textoFormatado = \n`Assunto: ${assunto}\nDe: ${remetente}\nData: ${dataRecebimento}\n\nCategoria: ${categoria}\nPalavras-chave detectadas: ${palavrasChave.join(\", \") || \"Nenhuma\"}\n\nCorpo formatado:\n${corpo}\n`;\n\n// RETORNO PARA OS PRÓXIMOS NODES\nreturn {\n  json: {\n    assunto,\n    corpo,\n    remetente,\n    dataRecebimento,\n    categoria,\n    palavrasChave,\n    textoFormatado\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "70406ad3-6602-4a26-bdbe-c0caf9faf99b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "content": "## Processa os dados.\n**JS, envia para uma lista de itens**",
+        "height": 144,
+        "width": 256,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -128
+      ],
+      "id": "f5902fb5-2e98-47a2-b024-a69e723a9d0f",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Envia\n",
+        "height": 80,
+        "width": 150,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        480,
+        -32
+      ],
+      "id": "80a8261f-3c27-4898-80f8-3436f98b24a0",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "jsCode": "String conteudo = \n    \"Status: \" + $json.get(\"status\") + \"\\n\" +\n    \"Email: \" + $json.get(\"email\") + \"\\n\" +\n    \"Horário: \" + java.time.Instant.now().toString() + \"\\n\";\n\nMap<String, Object> out = new HashMap<>();\nout.put(\"data\", conteudo);\nreturn out;\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        16
+      ],
+      "id": "4fa6da60-7cc5-4131-8220-1527ab53f881",
+      "name": "Confirma"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "/path",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        992,
+        16
+      ],
+      "id": "cd57d24b-1576-4b27-8016-b13578eb8cb2",
+      "name": "Gera .txt"
+    },
+    {
+      "parameters": {
+        "content": "## Gera TXT confirmando",
+        "height": 144,
+        "width": 256,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        912,
+        -96
+      ],
+      "id": "8371ce90-522e-49ec-b1ab-2377cfe44d31",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "sendTo": "moraesandrey321@gmail.com",
+        "subject": "Hello World!",
+        "emailType": "text",
+        "message": "Olá,  Aqui vai um gatinho:   |/\\_/\\   Abraço.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        512,
+        32
+      ],
+      "id": "9b13cae9-4060-47eb-af9f-d2c92241faac",
+      "name": "Send a message",
+      "webhookId": "474bc069-ba9e-4e61-a087-d4a9d9dc10e2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Mhv0DQPHiMpUL0r2",
+          "name": "Crendencial Google"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Código para gerar + de 1 email.",
+        "height": 144,
+        "width": 256,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        320,
+        256
+      ],
+      "id": "9fe15f94-709b-4fdf-9c10-bf6e7bf2e961",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "jsCode": "List<String> emails = Arrays.asList(\n    \"email1@gmail.com\",\n    \"email2@gmail.com\",\n    \"email3@gmail.com\"\n);\n\nList<Map<String, Object>> out = new ArrayList<>();\n\nfor (String e : emails) {\n    Map<String, Object> item = new HashMap<>();\n    item.put(\"email\", e);\n    item.put(\"assunto\", \"Aviso Automático\");\n    item.put(\"mensagem\", \"Mensagem enviada automaticamente pelo workflow.\");\n    out.add(item);\n}\n\nreturn out;\n//retorna \n'''email: email1@gmail.com'''\n'''email: email2@gmail.com'''\n'''email: email3@gmail.com'''"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        352
+      ],
+      "id": "7252d6a9-6dc1-4e85-92fa-826f40bd7e16",
+      "name": "Multiplos emaills"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirma": {
+      "main": [
+        [
+          {
+            "node": "Gera .txt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Confirma",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2fd722ff-353a-40be-9c98-a6bb9ec09119",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6dcc5c6f2fc83a0128e432c1f97bc1ae0dd33d9dae98da390d2678d969b02f75"
+  },
+  "id": "R3QxmmHMG4CBLU3t",
+  "tags": []
+}
